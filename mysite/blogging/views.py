@@ -21,18 +21,17 @@ def post_create(request):
                 "data": serialized_data
             }
         )
-
+    
     if request.method == "POST":
         post_serializer = PostSerializer(data=request.data, context={"request": request})
-        post_serializer.is_valid(raise_exception=True)
-        post = post_serializer.save()
-        serialized_data = PostSerializer(instance=post, context={"request": request}).data
-        return Response(
-            data=
-            {
-                "message": "New post record created", 
-                "data": serialized_data
-            },
-            status=status.HTTP_201_CREATED
+        if post_serializer.is_valid():
+            post = post_serializer.save(user=request.user)  # Ensure the user is set
+            serialized_data = PostSerializer(instance=post, context={"request": request}).data
+            return Response(
+                data={
+                    "message": "New post record created", 
+                    "data": serialized_data
+                },
+                status=status.HTTP_201_CREATED
             )
-
+        return Response(post_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
